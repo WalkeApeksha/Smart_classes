@@ -88,7 +88,7 @@ const accessMatrix = {
       'module-announcements', 'module-leaderboard', 'module-settings'
     ],
     sidebar: [
-      { id: 'module-teacher', label: '📊 Teacher Dashboard', icon: 'dashboard' },
+      { id: 'module-teacher',  label: '📊 Teacher Dashboard', icon: 'dashboard' },
       { id: 'module-attendance', label: '📅 Attendance Rolls', icon: 'how_to_reg' },
       { id: 'module-homework', label: '📝 Homework & Review', icon: 'assignment' },
       { id: 'module-notes', label: '📚 Notes & Study Files', icon: 'folder' },
@@ -98,7 +98,7 @@ const accessMatrix = {
       { id: 'module-classes', label: '📹 Live Virtual Classes', icon: 'videocam', badge: 'Live' },
       { id: 'module-announcements', label: '📢 Notices & Circulars', icon: 'campaign' },
       { id: 'module-leaderboard', label: '🏆 Class Leaderboard', icon: 'military_tech' },
-      { id: 'module-settings', label: '🔐 Security & Password', icon: 'settings' }
+      { id: 'module-settings',  label: '🔐 Security & Password', icon: 'settings' }
     ]
   },
   student: {
@@ -129,7 +129,7 @@ const accessMatrix = {
     allowedModules: [
       'module-parent', 'module-attendance', 'module-progress', 'module-homework', 
       'module-timetable', 'module-leaderboard', 'module-report-card', 'module-payments', 
-      'module-receipts', 'module-settings'
+      'module-receipts ', 'module-settings'
     ],
     sidebar: [
       { id: 'module-parent', label: '📊 Parent Dashboard', icon: 'dashboard' },
@@ -218,7 +218,7 @@ function handleRoleSelectChange(roleKey) {
   } else if (roleKey === 'parent') {
     emailInput.value = 'parent@gmail.com';
     pwdInput.value = 'Parent@123';
-    idTag.textContent = 'ID: PRN-2024-0980';
+    idTag.textContent  = 'ID: PRN-2024-0980';
   }
   hideAuthError();
 }

@@ -9,7 +9,7 @@ const homeworkSchema = new mongoose.Schema({
   teacherName: { type: String },
   dueDate: { type: Date, required: true },
   attachments: [{
-    fileName: String,
+    fileName:  String,
     fileUrl: String
   }],
   status: { type: String, enum: ['active', 'submitted', 'graded', 'expired'], default: 'active' },

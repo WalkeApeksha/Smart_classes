@@ -11,7 +11,7 @@ const announcementSchema = new mongoose.Schema({
     fileName: String,
     fileUrl: String
   }],
-  isPublished: { type: Boolean, default: true }
+  isPublished: { type:  Boolean, default: true }
 }, { timestamps: true });
 
 export default mongoose.model('Announcement', announcementSchema);
