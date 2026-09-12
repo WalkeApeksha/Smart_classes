@@ -126,3 +126,25 @@ export const payFee = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Get child academic reports
+// @route   GET /api/parent/children/:id/reports
+export const getChildReports = async (req, res, next) => {
+  try {
+    const studentId = req.params.id;
+
+    // Strict IDOR Verification
+    const isAuthorized = await verifyParentChildAccess(req.user, studentId);
+    if (!isAuthorized && req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: You do not have permission to view academic reports for this student.'
+      });
+    }
+
+    const reports = await Report.find({ studentId }).sort({ createdAt: -1 });
+    res.status(200).json({ success: true, count: reports.length, reports });
+  } catch (error) {
+    next(error);
+  }
+};

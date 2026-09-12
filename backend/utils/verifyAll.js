@@ -92,8 +92,10 @@ async function runVerification() {
     passwordResetExpires: null
   };
   const testOtp = '123456';
-  const isValidOtp = (testUser.twoFactorSecret && testOtp === testUser.twoFactorSecret) ||
-                     (testUser.passwordResetToken && testOtp === testUser.passwordResetToken);
+  const isValidOtp = Boolean(
+    (testUser.twoFactorSecret && testOtp === testUser.twoFactorSecret) ||
+    (testUser.passwordResetToken && testOtp === testUser.passwordResetToken)
+  );
   console.log(`Arbitrary OTP '123456' rejected against secret 'KASHVI_SEC_9999': ${isValidOtp === false ? '✅ REJECTED (PASS)' : '❌ ALLOWED (FAIL)'}`);
   results.push({ name: '2FA Backdoor Elimination', pass: isValidOtp === false });
 

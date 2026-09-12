@@ -214,8 +214,10 @@ export const verify2FA = async (req, res, next) => {
     }
 
     // Verify against user's stored 2FA secret or active passwordResetToken OTP
-    const isValidOtp = (user.twoFactorSecret && otp === user.twoFactorSecret) ||
-                       (user.passwordResetToken && otp === user.passwordResetToken && user.passwordResetExpires > Date.now());
+    const isValidOtp = Boolean(
+      (user.twoFactorSecret && otp === user.twoFactorSecret) ||
+      (user.passwordResetToken && otp === user.passwordResetToken && user.passwordResetExpires > Date.now())
+    );
 
     if (!isValidOtp) {
       return res.status(400).json({ success: false, message: 'Invalid or expired 2FA code' });

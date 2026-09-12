@@ -85,12 +85,29 @@ export const getMyStudents = async (req, res, next) => {
 // Homework operations
 export const createHomework = async (req, res, next) => {
   try {
+    const { title, class: className, subject, dueDate } = req.body;
+
+    // Check for duplicate active homework
+    const duplicate = await Homework.findOne({
+      title: title?.trim(),
+      class: className,
+      subject: subject
+    });
+
+    if (duplicate) {
+      return res.status(400).json({
+        success: false,
+        message: `An assignment with the title "${title}" already exists for class ${className}`
+      });
+    }
+
     const homework = await Homework.create({
       ...req.body,
+      title: title?.trim(),
       teacherId: req.user._id,
       teacherName: req.user.name
     });
-    res.status(201).json({ success: true, homework });
+    res.status(201).json({ success: true, message: 'Homework created successfully', homework });
   } catch (error) {
     next(error);
   }
@@ -98,8 +115,14 @@ export const createHomework = async (req, res, next) => {
 
 export const getHomeworkList = async (req, res, next) => {
   try {
-    const homework = await Homework.find().sort({ createdAt: -1 });
-    res.status(200).json({ success: true, homework });
+    let query = {};
+    if (req.query.class) query.class = req.query.class;
+    if (req.user.role === 'teacher' && req.user.assignedClasses?.length > 0 && !req.query.class) {
+      query.class = { $in: req.user.assignedClasses };
+    }
+
+    const homework = await Homework.find(query).sort({ createdAt: -1 });
+    res.status(200).json({ success: true, count: homework.length, homework });
   } catch (error) {
     next(error);
   }

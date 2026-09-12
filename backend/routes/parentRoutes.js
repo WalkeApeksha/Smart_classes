@@ -3,7 +3,8 @@ import {
   getChildren,
   getChildAttendance,
   getChildFees,
-  payFee
+  payFee,
+  getChildReports
 } from '../controllers/parentController.js';
 import { protect } from '../middleware/auth.js';
 import { authorize } from '../middleware/roleCheck.js';
@@ -16,6 +17,7 @@ router.use(authorize('parent', 'admin'));
 router.get('/children', getChildren);
 router.get('/children/:id/attendance', getChildAttendance);
 router.get('/children/:id/fees', getChildFees);
+router.get('/children/:id/reports', getChildReports);
 router.post('/fees/pay', payFee);
 
 export default router;

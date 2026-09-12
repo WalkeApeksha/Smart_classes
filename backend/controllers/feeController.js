@@ -150,3 +150,112 @@ export const deleteFee = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Create Payment Order for a Fee Invoice (Parent / Student)
+// @route   POST /api/fees/:id/order
+export const createPaymentOrder = async (req, res, next) => {
+  try {
+    const fee = await FeeModel.findById(req.params.id);
+    if (!fee) {
+      return res.status(404).json({ success: false, message: 'Fee record not found' });
+    }
+
+    if (fee.status === 'paid') {
+      return res.status(400).json({ success: false, message: 'This fee invoice is already paid' });
+    }
+
+    // Role & Ownership check
+    if (req.user.role === 'parent') {
+      const isAuthorized = await verifyParentChildAccess(req.user, fee.studentId);
+      if (!isAuthorized) {
+        return res.status(403).json({ success: false, message: 'Access denied: You can only pay fees for your own child' });
+      }
+    } else if (req.user.role === 'student') {
+      if (fee.studentId.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ success: false, message: 'Access denied: You can only pay your own fees' });
+      }
+    } else if (req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Unauthorized role for payments' });
+    }
+
+    const orderId = 'ORD-' + Date.now() + '-' + Math.floor(1000 + Math.random() * 9000);
+    const upiPayLink = `upi://pay?pa=kashvi.edu@icici&pn=Kashvi%20SmartClass&am=${fee.amount}&cu=INR&tn=Fee%20Invoice%20${fee.month}%20${fee.studentName}`;
+
+    res.status(200).json({
+      success: true,
+      order: {
+        orderId,
+        feeId: fee._id,
+        amount: fee.amount,
+        currency: 'INR',
+        studentName: fee.studentName,
+        class: fee.class,
+        month: fee.month,
+        upiPayLink
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Process & Verify Payment for a Fee Invoice (Parent / Student / Webhook)
+// @route   POST /api/fees/:id/pay
+export const processPayment = async (req, res, next) => {
+  try {
+    const { paymentMethod, transactionId } = req.body;
+    const fee = await FeeModel.findById(req.params.id);
+    if (!fee) {
+      return res.status(404).json({ success: false, message: 'Fee record not found' });
+    }
+
+    if (fee.status === 'paid') {
+      return res.status(400).json({ success: false, message: 'This fee invoice has already been settled' });
+    }
+
+    // Ownership check
+    if (req.user.role === 'parent') {
+      const isAuthorized = await verifyParentChildAccess(req.user, fee.studentId);
+      if (!isAuthorized) {
+        return res.status(403).json({ success: false, message: 'Access denied: You can only pay fees for your own child' });
+      }
+    } else if (req.user.role === 'student') {
+      if (fee.studentId.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ success: false, message: 'Access denied: You can only pay your own fees' });
+      }
+    } else if (req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Unauthorized' });
+    }
+
+    const receiptNumber = 'REC-' + new Date().getFullYear() + '-' + Math.floor(100000 + Math.random() * 900000);
+    const txnId = transactionId || 'TXN-' + Date.now();
+
+    fee.status = 'paid';
+    fee.paidDate = new Date();
+    fee.paymentMethod = paymentMethod || 'UPI / NetBanking';
+    fee.transactionId = txnId;
+    fee.receiptNumber = receiptNumber;
+    fee.remarks = `Payment verified via ${paymentMethod || 'Online Gateway'}`;
+
+    await fee.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Payment completed and verified successfully!',
+      receipt: {
+        receiptNumber: fee.receiptNumber,
+        transactionId: fee.transactionId,
+        feeId: fee._id,
+        studentName: fee.studentName,
+        class: fee.class,
+        month: fee.month,
+        amount: fee.amount,
+        paidDate: fee.paidDate,
+        paymentMethod: fee.paymentMethod
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

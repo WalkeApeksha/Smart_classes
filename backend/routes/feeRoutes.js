@@ -4,7 +4,9 @@ import {
   getFeeById,
   createFee,
   updateFee,
-  deleteFee
+  deleteFee,
+  createPaymentOrder,
+  processPayment
 } from '../controllers/feeController.js';
 import { protect } from '../middleware/auth.js';
 import { authorize } from '../middleware/roleCheck.js';
@@ -16,6 +18,10 @@ router.use(protect);
 // View fees (filtered by role inside controller)
 router.get('/', getAllFees);
 router.get('/:id', getFeeById);
+
+// Payment endpoints (Parents and Students can pay their invoices)
+router.post('/:id/order', createPaymentOrder);
+router.post('/:id/pay', processPayment);
 
 // Admin only mutations
 router.post('/', authorize('admin'), createFee);

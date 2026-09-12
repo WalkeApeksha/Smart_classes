@@ -8,7 +8,7 @@ import {
   submitTestAttempt,
   getLeaderboard
 } from '../controllers/studentController.js';
-import { generateAIStudyPlan } from '../controllers/aiController.js';
+import { generateAIStudyPlan, getLatestStudyPlan } from '../controllers/aiController.js';
 import { protect } from '../middleware/auth.js';
 import { authorize } from '../middleware/roleCheck.js';
 
@@ -24,6 +24,7 @@ router.post('/homework/:id/submit', submitHomework);
 router.get('/tests', getStudentTests);
 router.post('/tests/:id/submit', submitTestAttempt);
 router.get('/leaderboard', getLeaderboard);
+router.get('/study-plan', getLatestStudyPlan);
 router.post('/study-plan', generateAIStudyPlan);
 
 export default router;
