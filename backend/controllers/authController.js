@@ -204,29 +204,41 @@ export const resetPassword = async (req, res, next) => {
 export const verify2FA = async (req, res, next) => {
   try {
     const { userId, otp } = req.body;
-    const user = await User.findById(userId);
+    if (!userId || !otp) {
+      return res.status(400).json({ success: false, message: 'User ID and OTP are required' });
+    }
 
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    // Simulated 2FA validation (accepts valid 6 digit OTP or standard 123456 / secret)
-    if (otp === '123456' || otp === user.twoFactorSecret || otp.length === 6) {
-      const token = generateToken(user._id, user.role);
-      return res.status(200).json({
-        success: true,
-        token,
-        user: {
-          id: user._id,
-          uniqueId: user.uniqueId,
-          name: user.name,
-          email: user.email,
-          role: user.role
-        }
-      });
+    // Verify against user's stored 2FA secret or active passwordResetToken OTP
+    const isValidOtp = (user.twoFactorSecret && otp === user.twoFactorSecret) ||
+                       (user.passwordResetToken && otp === user.passwordResetToken && user.passwordResetExpires > Date.now());
+
+    if (!isValidOtp) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired 2FA code' });
     }
 
-    res.status(400).json({ success: false, message: 'Invalid 2FA code' });
+    // Clear reset token if used
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    user.lastLogin = new Date();
+    await user.save({ validateBeforeSave: false });
+
+    const token = generateToken(user._id, user.role);
+    return res.status(200).json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        uniqueId: user.uniqueId,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
   } catch (error) {
     next(error);
   }

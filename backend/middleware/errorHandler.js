@@ -22,6 +22,14 @@ export const errorHandler = (err, req, res, next) => {
     return res.status(400).json({ success: false, message });
   }
 
+  // MongoDB connection / buffer timeout
+  if (err.message && err.message.includes('buffering timed out')) {
+    return res.status(500).json({
+      success: false,
+      message: 'Database connection error. Please verify that MongoDB is running on your machine.'
+    });
+  }
+
   res.status(error.statusCode || 500).json({
     success: false,
     message: error.message || 'Internal Server Error'

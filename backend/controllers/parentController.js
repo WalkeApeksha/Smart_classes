@@ -3,6 +3,7 @@ import Attendance from '../models/Attendance.js';
 import Homework from '../models/Homework.js';
 import Fee from '../models/Fee.js';
 import Report from '../models/Report.js';
+import { verifyParentChildAccess } from '../utils/parentAuth.js';
 
 // @desc    Get parent's linked children
 // @route   GET /api/parent/children
@@ -13,7 +14,7 @@ export const getChildren = async (req, res, next) => {
 
     if (parent.children && parent.children.length > 0) {
       const childIds = parent.children.map(c => c.studentId).filter(Boolean);
-      children = await User.find({ _id: { $in: childIds } }).select('-password');
+      children = await User.find({ _id: { $in: childIds }, role: 'student' }).select('-password');
     }
 
     // If no direct link in parent doc, search by parentEmail
@@ -24,11 +25,7 @@ export const getChildren = async (req, res, next) => {
       }).select('-password');
     }
 
-    // Fallback: Return sample active students if mock setup
-    if (children.length === 0) {
-      children = await User.find({ role: 'student' }).limit(2).select('-password');
-    }
-
+    // Return empty array if no children linked (Never return random fallback students)
     res.status(200).json({ success: true, count: children.length, children });
   } catch (error) {
     next(error);
@@ -39,10 +36,21 @@ export const getChildren = async (req, res, next) => {
 // @route   GET /api/parent/children/:id/attendance
 export const getChildAttendance = async (req, res, next) => {
   try {
-    const records = await Attendance.find({ studentId: req.params.id }).sort({ date: -1 });
+    const studentId = req.params.id;
+
+    // Strict IDOR Verification
+    const isAuthorized = await verifyParentChildAccess(req.user, studentId);
+    if (!isAuthorized && req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: You do not have permission to access records for this student.'
+      });
+    }
+
+    const records = await Attendance.find({ studentId }).sort({ date: -1 });
     const total = records.length;
     const present = records.filter(r => r.status === 'present').length;
-    const percentage = total > 0 ? ((present / total) * 100).toFixed(1) : 95.0;
+    const percentage = total > 0 ? ((present / total) * 100).toFixed(1) : 0;
 
     res.status(200).json({ success: true, percentage, count: total, records });
   } catch (error) {
@@ -54,10 +62,21 @@ export const getChildAttendance = async (req, res, next) => {
 // @route   GET /api/parent/children/:id/fees
 export const getChildFees = async (req, res, next) => {
   try {
-    const student = await User.findById(req.params.id);
+    const studentId = req.params.id;
+
+    // Strict IDOR Verification
+    const isAuthorized = await verifyParentChildAccess(req.user, studentId);
+    if (!isAuthorized && req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: You do not have permission to view fee records for this student.'
+      });
+    }
+
+    const student = await User.findById(studentId);
     const fees = await Fee.find({
       $or: [
-        { studentId: req.params.id },
+        { studentId: studentId },
         { studentName: student ? student.name : '' }
       ]
     }).sort({ dueDate: -1 });
@@ -77,6 +96,17 @@ export const payFee = async (req, res, next) => {
 
     if (!fee) {
       return res.status(404).json({ success: false, message: 'Fee record not found' });
+    }
+
+    // Verify parent ownership of the student for this fee
+    if (fee.studentId) {
+      const isAuthorized = await verifyParentChildAccess(req.user, fee.studentId);
+      if (!isAuthorized && req.user.role !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied: You are not authorized to settle fees for this student.'
+        });
+      }
     }
 
     fee.status = 'paid';

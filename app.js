@@ -527,8 +527,14 @@ function editUser(userId) {
 
 function deleteUser(userId) {
   if (confirm(`Are you sure you want to deactivate / delete user ${userId}?`)) {
+    const userObj = authState.userDirectory.find(u => u.id === userId);
     authState.userDirectory = authState.userDirectory.filter(u => u.id !== userId);
     renderMasterUserTable('all');
+    
+    // Attempt backend sync
+    if (userObj && userObj._id) {
+      fetch(`/api/admin/users/${userObj._id}`, { credentials: 'include', method: 'DELETE' }).catch(()=>{});
+    }
     showToast(`User ${userId} deactivated successfully`, 'success');
   }
 }
@@ -544,7 +550,7 @@ function handleAddTeacherSubmit(e) {
   const classAssigned = document.getElementById('new-teacher-class').value;
   const id = generateUniqueId('TCH');
 
-  authState.userDirectory.push({
+  const newTeacher = {
     id,
     name,
     email,
@@ -554,7 +560,9 @@ function handleAddTeacherSubmit(e) {
     classAssigned,
     status: 'Active',
     avatar: name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase()
-  });
+  };
+
+  authState.userDirectory.push(newTeacher);
 
   authState.credentialsStore[email.toLowerCase()] = {
     password: 'Teacher@123',
@@ -562,6 +570,19 @@ function handleAddTeacherSubmit(e) {
     id,
     name
   };
+
+  // Attempt backend persistence
+  fetch('/api/admin/users', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name,
+      email: email.toLowerCase(),
+      role: 'teacher',
+      subject,
+      assignedClasses: [classAssigned]
+    })
+  }).catch(()=>{});
 
   closeModal('modal-add-teacher');
   renderMasterUserTable('all');
@@ -624,6 +645,20 @@ function handleAddStudentSubmit(e) {
       name: `Parent of ${name}`
     };
   }
+
+  // Attempt backend persistence
+  fetch('/api/admin/users', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name,
+      email: email.toLowerCase(),
+      role: 'student',
+      class: cls,
+      rollNumber: roll,
+      parentEmail: parentEmail.toLowerCase()
+    })
+  }).catch(()=>{});
 
   closeModal('modal-add-student');
   renderMasterUserTable('all');
@@ -883,10 +918,26 @@ function prevQuizQuestion() {
 
 function submitQuizTest() {
   if (authState.quizInterval) clearInterval(authState.quizInterval);
-  document.getElementById('test-runner-card').style.display = 'none';
-  document.getElementById('test-results-card').style.display = 'block';
+  
+  let correct = 0;
+  authState.quizList.forEach((q, idx) => {
+    if (authState.quizAnswers[idx] === q.correct) {
+      correct++;
+    }
+  });
+  const total = authState.quizList.length;
+  const percentage = Math.round((correct / total) * 100);
+
+  const runnerCard = document.getElementById('test-runner-card');
+  const resultsCard = document.getElementById('test-results-card');
+  if (runnerCard) runnerCard.style.display = 'none';
+  if (resultsCard) {
+    resultsCard.style.display = 'block';
+    const scoreVal = document.getElementById('test-score-val');
+    if (scoreVal) scoreVal.textContent = `${correct}/${total} (${percentage}%)`;
+  }
   if (typeof confetti === 'function') confetti({ particleCount: 100, spread: 70 });
-  showToast('Test auto-graded: 18/20 (90%)!', 'success');
+  showToast(`Test auto-graded: ${correct}/${total} (${percentage}%)!`, 'success');
 }
 
 function retryQuizTest() {

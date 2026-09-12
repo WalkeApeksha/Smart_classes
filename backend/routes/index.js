@@ -4,9 +4,13 @@ import adminRoutes from './adminRoutes.js';
 import teacherRoutes from './teacherRoutes.js';
 import studentRoutes from './studentRoutes.js';
 import parentRoutes from './parentRoutes.js';
-import { getAllFees, createFee, updateFee } from '../controllers/feeController.js';
-import { getReports, createReport } from '../controllers/reportController.js';
-import { protect } from '../middleware/auth.js';
+import feeRoutes from './feeRoutes.js';
+import reportRoutes from './reportRoutes.js';
+import studyMaterialRoutes from './studyMaterialRoutes.js';
+import timetableRoutes from './timetableRoutes.js';
+import onlineClassRoutes from './onlineClassRoutes.js';
+import aiRoutes from './aiRoutes.js';
+import notificationRoutes from './notificationRoutes.js';
 
 const router = express.Router();
 
@@ -15,13 +19,12 @@ router.use('/admin', adminRoutes);
 router.use('/teacher', teacherRoutes);
 router.use('/student', studentRoutes);
 router.use('/parent', parentRoutes);
-
-// Shared fee & report endpoints
-router.get('/fees', protect, getAllFees);
-router.post('/fees', protect, createFee);
-router.put('/fees/:id', protect, updateFee);
-
-router.get('/reports', protect, getReports);
-router.post('/reports', protect, createReport);
+router.use('/fees', feeRoutes);
+router.use('/reports', reportRoutes);
+router.use('/notes', studyMaterialRoutes);
+router.use('/timetable', timetableRoutes);
+router.use('/online-classes', onlineClassRoutes);
+router.use('/ai', aiRoutes);
+router.use('/notifications', notificationRoutes);
 
 export default router;
