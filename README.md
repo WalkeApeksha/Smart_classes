@@ -8,39 +8,38 @@
 [![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![JWT](https://img.shields.io/badge/Auth-JWT_Token-FB542B?style=for-the-badge&logo=json-web-tokens&logoColor=white)](https://jwt.io/)
 
-**Kashvi SmartClass** is an institutional academic management system engineered for schools, coaching institutes, and universities. Featuring unified multi-role authentication (**Admin**, **Teacher**, **Student**, and **Parent**), real-time attendance analytics, homework management, online fee tracking, report cards, and automated notifications.
+**Kashvi SmartClass** is an institutional academic management system engineered for schools, coaching institutes, and universities. Featuring unified multi-role authentication (**Admin**, **Teacher**, **Student**, and **Parent**), real-time attendance analytics, homework management, AI-powered study planner (Google Gemini), dynamic UPI QR fee payments & instant receipts, clash-free academic timetable scheduling, live virtual classrooms, and automated notifications.
 
 ---
 
 ## 🌟 Key Features by Role
 
-### 👑 1. Admin Dashboard
-- **Institutional Overview**: Real-time stats on total students, faculty members, fee collections, and system health.
-- **User Management**: Add, update, view, and manage faculty, student, and parent accounts.
-- **Fee Management**: Create fee invoices, track paid/pending statuses, and monitor revenue analytics.
-- **Academic Setup**: Class allocation, teacher assignment, and timetable coordination.
-- **System Announcements**: Broadcast institution-wide alerts and updates.
+### 👑 1. Admin Dashboard (`/dashboard/admin`)
+- **Institutional Overview**: Real-time stats on total students, faculty members, fee revenue collections, and system health.
+- **User Directory**: Create, update, search, and manage faculty, student, and parent accounts with encrypted passwords and unique IDs (e.g. `STU-2024-XXXX`).
+- **Academic Timetable Scheduler**: Day/time/class schedule management with automated backend conflict detection (`TEACHER_COLLISION`, `CLASS_COLLISION`, `ROOM_COLLISION`).
+- **Fee Management**: Create tuition invoices, monitor revenue analytics, and track real-time settlement status.
+- **Study Notes Governance**: View and manage curriculum documents across all grades.
 
-### 👨‍🏫 2. Teacher Dashboard
-- **Classroom Operations**: Quick attendance marking (Present / Absent / Leave) per class & subject.
-- **Homework Hub**: Create homework tasks with due dates, attachments, instructions, and review submissions.
-- **Examination & Marks Entry**: Publish class test marks, term grades, and academic feedback.
-- **Student Progress Insights**: Monitor individual and class-level academic performance.
-- **Notice Board**: Broadcast notifications to assigned classes and parents.
+### 👨‍🏫 2. Teacher Dashboard (`/dashboard/teacher`)
+- **Attendance Register**: One-click class attendance marking (`Present`, `Absent`, `Late`) with "Mark All Present" helper.
+- **Homework Hub**: Create homework assignments with due dates, attachments, duplicate prevention, and submissions review.
+- **Live Classroom Scheduling**: Schedule and launch Google Meet / Zoom live classes.
+- **Study Materials Repository**: Upload and publish subject notes, PDF guides, and revision resources.
 
-### 🎒 3. Student Dashboard
-- **Academic Hub**: Daily schedule, active timetable, subject list, and syllabus progress.
-- **Attendance Analytics**: Visual breakdown of attendance percentage with graphical charts.
-- **Homework & Submissions**: View assigned homework, upload completed tasks, and track evaluation status.
-- **Grade Reports**: View test scores, term report cards, and ranking summaries.
-- **Fee Status**: View pending/paid tuition fee receipts.
+### 🎒 3. Student Dashboard (`/dashboard/student`)
+- **Academic Learning Workspace**: Daily schedule, quick concept boosters, and performance stats.
+- **Attendance Analytics**: Visual breakdown of attendance percentage with graphical metric cards.
+- **Homework & Submissions**: View assigned tasks, upload file attachments/links, and track submission feedback.
+- **Dynamic Leaderboard**: Live academic ranking calculated dynamically from weighted test scores and attendance consistency.
+- **🤖 AI Study Plan Generator**: Adaptive 7-day personalized study timetable powered by **Google Gemini 1.5 Flash** (with built-in academic intelligence engine fallback) and MongoDB persistence.
+- **Live Virtual Classes**: Join scheduled live lectures directly with one click.
 
-### 👨‍👩‍👦 4. Parent Dashboard
-- **Multi-Ward Support**: Switch seamlessly between enrolled children.
-- **Live Attendance Monitoring**: Instant tracking of child's daily presence with alerts.
-- **Academic Performance**: View test results, homework completion rates, and teacher remarks.
-- **Fee Invoices & Payments**: Track fee schedules and receipt generation.
-- **Direct Faculty Communication**: View assigned teacher details and send feedback/queries.
+### 👨‍👩‍👦 4. Parent Dashboard (`/dashboard/parent`)
+- **Multi-Ward Switcher**: Switch seamlessly between enrolled children under a single guardian account.
+- **Live Attendance Monitor**: Daily attendance log and cumulative presence percentage.
+- **Fee Invoices & Online Payments**: View pending invoices, pay instantly via **Dynamic UPI QR Code** (`upi://pay`) or card/NetBanking simulation, and download/print official receipts.
+- **Report Cards**: Term-by-term score sheets, percentages, subject grades, and faculty remarks.
 
 ---
 
@@ -48,11 +47,13 @@
 
 | Layer | Technologies |
 | :--- | :--- |
-| **Backend API** | Node.js (ES Modules), Express.js 4.19, Mongoose 8 |
-| **Database** | MongoDB (Local or MongoDB Atlas) |
-| **Authentication & Security** | JWT (JSON Web Tokens), Bcrypt.js, Helmet, Express Validator, CORS |
+| **Backend API** | Node.js (ES Modules), Express.js 4.19, Mongoose 8.4, Axios |
+| **Database** | MongoDB (Local `mongodb://127.0.0.1:27017` or MongoDB Atlas) |
+| **Authentication & Security** | JWT (JSON Web Tokens), Bcrypt.js, Helmet, Express Validator, CORS, Strict Parent IDOR Protection |
+| **AI Engine** | Google Gemini 1.5 Flash API + Built-in Adaptive Academic Planner |
+| **Payments** | Dynamic UPI QR Generator (`upi://pay`), Order Creation, Verification Webhooks, Printable Receipts |
 | **File Storage & Media** | Multer, Cloudinary SDK |
-| **Frontend Options** | • **Interactive Single-Page Portal**: HTML5, Vanilla CSS3 (Glassmorphism), JavaScript (ES6+), Chart.js, Canvas Confetti<br>• **React Application**: React 18, Vite 5, Tailwind CSS, Lucide Icons, React Router DOM, Axios |
+| **Frontend Options** | • **React Web Client**: React 18, Vite 5, Tailwind CSS, Lucide Icons, React Router DOM 6/7, React Hot Toast, Axios<br>• **Standalone Portal**: HTML5, Vanilla CSS3 (Glassmorphism), JavaScript (ES6+), Chart.js |
 | **Logging & Utilities** | Morgan, Dotenv, Nodemailer |
 
 ---
@@ -62,29 +63,40 @@
 ```
 kashvi/
 ├── backend/                     # Node.js Express REST API
-│   ├── config/                  # Database & 3rd-party service configs
+│   ├── config/                  # Database, Email & Cloudinary configs
 │   │   ├── cloudinary.js
-│   │   └── database.js
-│   ├── controllers/             # Request handlers for auth, admin, teacher, etc.
-│   ├── middleware/              # Auth guard, role check, error handler, upload
-│   ├── models/                  # Mongoose Schemas (User, Attendance, Homework, Fee, etc.)
-│   ├── routes/                  # API route definitions
-│   │   ├── adminRoutes.js
-│   │   ├── authRoutes.js
-│   │   ├── parentRoutes.js
-│   │   ├── studentRoutes.js
-│   │   └── teacherRoutes.js
-│   ├── utils/                   # Seed data & helper utilities
-│   │   └── seedData.js
+│   │   ├── database.js
+│   │   └── email.js
+│   ├── controllers/             # Request handlers for all modules
+│   │   ├── adminController.js
+│   │   ├── aiController.js
+│   │   ├── authController.js
+│   │   ├── feeController.js
+│   │   ├── notificationController.js
+│   │   ├── onlineClassController.js
+│   │   ├── parentController.js
+│   │   ├── reportController.js
+│   │   ├── studentController.js
+│   │   ├── studyMaterialController.js
+│   │   ├── teacherController.js
+│   │   └── timetableController.js
+│   ├── middleware/              # Auth guard, role check, trial guard, upload, error handler
+│   ├── models/                  # Mongoose Schemas (User, Attendance, Homework, Fee, StudyPlan, etc.)
+│   ├── routes/                  # Modular API routes
+│   ├── utils/                   # Seed data, ID generator, notification service, verification suite
 │   ├── .env.example             # Backend environment template
 │   ├── package.json
 │   └── server.js                # Express entry point
 │
 ├── frontend/                    # Vite + React Modern Web Client
 │   ├── src/
-│   │   ├── services/            # Axios API clients (auth, endpoints)
-│   │   ├── styles/              # Global Tailwind CSS styles
-│   │   └── utils/               # Formatting and helper utilities
+│   │   ├── components/          # Layout, Sidebar Navigation, ProtectedRoute
+│   │   ├── context/             # AuthContext (JWT state & 2FA handlers)
+│   │   ├── pages/               # Multi-role dashboard pages (Admin, Teacher, Student, Parent, Login)
+│   │   ├── services/            # Axios API clients
+│   │   ├── styles/              # Global Tailwind CSS stylesheet
+│   │   ├── App.jsx              # Application router
+│   │   └── main.jsx             # React entry point
 │   ├── index.html
 │   ├── package.json
 │   ├── tailwind.config.js
@@ -93,6 +105,7 @@ kashvi/
 ├── index.html                   # Standalone Full-Featured Interactive Portal
 ├── app.js                       # Interactive portal application logic & charts
 ├── styles.css                   # Premium glassmorphic stylesheet
+├── package.json                 # Root convenience scripts
 └── README.md                    # Project documentation
 ```
 
@@ -102,7 +115,7 @@ kashvi/
 
 ### Prerequisites
 - [Node.js](https://nodejs.org/) (v18.0.0 or higher recommended)
-- [MongoDB](https://www.mongodb.com/) running locally (`mongodb://localhost:27017`) or a MongoDB Atlas URI
+- [MongoDB](https://www.mongodb.com/) running locally (`mongodb://127.0.0.1:27017`) or MongoDB Atlas URI
 
 ---
 
@@ -124,13 +137,16 @@ kashvi/
    PORT=5000
    NODE_ENV=development
    MONGODB_URI=mongodb://127.0.0.1:27017/kashvi_smartclass
-   JWT_SECRET=your_super_secret_jwt_key
+   JWT_SECRET=kashvi_super_secure_jwt_secret_key_2024_academic
    JWT_EXPIRE=7d
    FRONTEND_URL=http://localhost:5173
 
    # Default Admin Credentials
    ADMIN_EMAIL=admin@kashvi.com
    ADMIN_PASSWORD=Admin@2024
+
+   # Optional: Google Gemini AI API Key
+   GEMINI_API_KEY=your_gemini_api_key_here
 
    # Optional: Cloudinary & Email Configuration
    CLOUDINARY_CLOUD_NAME=your_cloud_name
@@ -140,8 +156,8 @@ kashvi/
    EMAIL_PASS=your_email_password
    ```
 
-4. **Seed Demo Data (Optional but Recommended)**:
-   Populate users, attendance, fees, homework, and test records:
+4. **Seed Demo Data (Recommended)**:
+   Populate users, attendance, fees, homework, timetables, and report cards:
    ```bash
    npm run seed
    ```
@@ -160,23 +176,16 @@ kashvi/
 
 ### 2. Frontend Setup
 
-#### Option A: Standalone Portal (Direct Browser Access)
-Simply open the root `index.html` file in any modern web browser or serve it using a local live server:
-```bash
-# From workspace root
-npx serve .
-# or double click index.html
-```
-
-#### Option B: React + Vite Frontend
 1. **Navigate to the frontend folder**:
    ```bash
    cd frontend
    ```
+
 2. **Install dependencies**:
    ```bash
    npm install
    ```
+
 3. **Start the Vite dev server**:
    ```bash
    npm run dev
@@ -185,13 +194,27 @@ npx serve .
 
 ---
 
-## 🔑 Demo Credentials
+### 3. Root Workspace Commands (Convenience)
 
-If you populated the database using `npm run seed` (or using default demo logins in the portal):
+From the project root folder (`d:\kashvi`):
+```bash
+# Run backend development server
+npm run dev:backend
+
+# Run frontend development server
+npm run dev:frontend
+
+# Seed database
+npm run seed
+```
+
+---
+
+## 🔑 Demo Credentials
 
 | Role | Email / Unique ID | Password | Access / Scope |
 | :--- | :--- | :--- | :--- |
-| **Admin** | `admin@kashvi.com` / `ADMIN-2024-0001` | `Admin@2024` | Full system control & settings |
+| **Admin** | `admin@kashvi.com` / `ADMIN-2024-0001` | `Admin@2024` | Full system control, timetable & user setup |
 | **Teacher** | `teacher@kashvi.com` / `TCH-2024-0048` | `Teacher@123` | Class 10-A, 9-B Mathematics |
 | **Student** | `student@kashvi.com` / `STU-2024-1284` | `Student@123` | Class 10-A (Aarav Sharma) |
 | **Parent** | `parent@kashvi.com` / `PRN-2024-0980` | `Parent@123` | Guardian of Aarav Sharma & Rhea |
@@ -204,42 +227,68 @@ All API endpoints are prefixed with `/api`:
 
 ### 🔐 Authentication (`/api/auth`)
 - `POST /api/auth/login` - Authenticate user & retrieve JWT token
-- `POST /api/auth/register` - Register new user account
-- `GET /api/auth/me` - Get current logged-in user profile
-- `PUT /api/auth/update-password` - Change account password
+- `POST /api/auth/register` - Register new user account (Admin only)
+- `GET /api/auth/me` - Get current authenticated user profile
+- `POST /api/auth/verify-2fa` - Two-factor authentication verification
+- `PUT /api/auth/change-password` - Change account password
 
 ### 👑 Admin (`/api/admin`)
-- `GET /api/admin/dashboard` - Get institutional stats and metrics
-- `GET /api/admin/users` - List all users (filters: role, class)
-- `POST /api/admin/users` - Create student/teacher/parent account
-- `DELETE /api/admin/users/:id` - Remove user account
+- `GET /api/admin/dashboard-stats` - Get institutional stats and telemetry
+- `GET /api/admin/users` - List all users (filters: role, class, search query)
+- `POST /api/admin/users` - Create new user with hashed password
+- `DELETE /api/admin/users/:id` - Remove/deactivate user account
 
 ### 👨‍🏫 Teacher (`/api/teacher`)
-- `POST /api/teacher/attendance` - Record class attendance batch
-- `POST /api/teacher/homework` - Create homework assignment
-- `POST /api/teacher/marks` - Upload student test scores
-- `POST /api/teacher/announcements` - Publish notice to assigned classes
+- `POST /api/teacher/attendance/mark` - Record batch attendance with remarks
+- `GET /api/teacher/attendance` - Query attendance history
+- `POST /api/teacher/homework` - Create homework with duplicate detection
+- `GET /api/teacher/homework` - View assignments and submissions
+- `GET /api/teacher/my-students` - Get assigned students list
 
 ### 🎒 Student (`/api/student`)
 - `GET /api/student/dashboard` - Get student metrics & schedule
 - `GET /api/student/attendance` - Get attendance summary & history
 - `GET /api/student/homework` - Get homework assignments & submission status
-- `GET /api/student/reports` - Get test results & report cards
+- `POST /api/student/homework/:id/submit` - Submit solution with file upload/link
+- `GET /api/student/leaderboard` - Live dynamic academic rankings
+- `GET /api/student/study-plan` - Get saved AI study plan
+- `POST /api/student/study-plan` - Generate & persist personalized AI study plan
 
 ### 👨‍👩‍👦 Parent (`/api/parent`)
 - `GET /api/parent/children` - Get linked student profiles
-- `GET /api/parent/child/:id/overview` - Get detailed academic overview of child
-- `GET /api/parent/child/:id/fees` - View tuition fee invoice breakdown
+- `GET /api/parent/children/:id/attendance` - Get attendance log of specific child
+- `GET /api/parent/children/:id/fees` - View tuition fee invoices of child
+- `GET /api/parent/children/:id/reports` - View term academic report cards
+
+### 💳 Fees & Payments (`/api/fees`)
+- `GET /api/fees` - List invoices (Role-filtered)
+- `GET /api/fees/:id` - Get invoice details
+- `POST /api/fees` - Create fee invoice (Admin only)
+- `POST /api/fees/:id/order` - Generate payment order & dynamic UPI link
+- `POST /api/fees/:id/pay` - Settle and verify fee payment, generate official receipt
+
+### 📅 Timetable (`/api/timetable`)
+- `GET /api/timetable` - Get class/teacher schedule
+- `POST /api/timetable` - Create slot with clash detection (`TEACHER_COLLISION`, `CLASS_COLLISION`, `ROOM_COLLISION`)
+- `DELETE /api/timetable/:id` - Remove timetable slot
+
+### 📚 Study Materials (`/api/notes`)
+- `GET /api/notes` - Get curriculum notes & PDF downloads
+- `POST /api/notes` - Upload new study material
+- `DELETE /api/notes/:id` - Delete study material
+
+### 📹 Online Classes (`/api/online-classes`)
+- `GET /api/online-classes` - Get scheduled live lectures
+- `POST /api/online-classes` - Schedule live class (Google Meet / Zoom)
+- `PUT /api/online-classes/:id` - Update live class details
+- `DELETE /api/online-classes/:id` - Cancel live class
 
 ---
 
-## 🔒 Security Best Practices
-- **Password Hashing**: Salted hashing via `bcryptjs`.
-- **JWT Protection**: Bearer tokens with strict expiration.
-- **HTTP Header Protection**: Enforced via `helmet`.
-- **Input Sanitization**: Request validation via `express-validator`.
-
----
-
-## 📄 License
-This project is licensed under the **ISC License**.
+## 🔒 Security & Architecture Highlights
+- **Password Hashing**: Cryptographic salting and hashing via `bcryptjs`.
+- **JWT Protection**: Stateless bearer tokens with strict expiration.
+- **Strict IDOR Prevention**: Parent endpoints verify child ownership to prevent unauthorized data access.
+- **HTTP Header Security**: Protected against XSS, clickjacking, and MIME sniffing via `helmet`.
+- **Input Sanitization**: Request validation and schema checks via `express-validator`.
+- **Timetable Conflict Engine**: Automated validation preventing teacher, room, and class double-booking.
